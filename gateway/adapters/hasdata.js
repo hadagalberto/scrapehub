@@ -6,7 +6,7 @@ const BASE_URL = "https://api.hasdata.com/scrape";
 
 const ENGINE_PATHS = {
   maps: "/google-maps/search",
-  serp: "/google-serp",
+  serp: "/google",
 };
 
 export class HasDataAdapter extends BaseAdapter {
@@ -24,11 +24,13 @@ export class HasDataAdapter extends BaseAdapter {
     return this._normalize(engine, data);
   }
 
-  _buildQuery(engine, params) {
-    // o endpoint de maps do hasdata nao tem parametro de localizacao livre
-    // (so 'q' e 'll' com lat/lng) — location precisa ir dentro do termo
-    // de busca mesmo, senao a api ignora e cai num default (ex: NYC)
-    if (engine === "maps" && params.location) {
+  _buildQuery(_engine, params) {
+    // maps nao tem parametro de localizacao livre (so 'q' e 'll' lat/lng).
+    // serp ate tem 'location', mas exige nome canonico exato do Google
+    // (ex: "Sao Paulo, Brazil") — texto informal ("Santana Bahia") erra o
+    // match e piora o resultado. Testado: fundir no proprio 'q' e' mais
+    // confiavel pros dois casos, sem depender de formato canonico.
+    if (params.location) {
       const { location, ...rest } = params;
       return { ...rest, q: `${params.q} ${location}` };
     }

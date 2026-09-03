@@ -1,6 +1,6 @@
 {
   "name": "scrapehub",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Gateway multi-provider de scraping/SERP com dashboard de monitoramento — fallback automatico, quota tracking e cache",
   "type": "module",
   "main": "main.js",

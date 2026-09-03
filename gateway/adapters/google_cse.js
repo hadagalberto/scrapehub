@@ -11,7 +11,13 @@ export class GoogleCseAdapter extends BaseAdapter {
     const cx = process.env.GOOGLE_CSE_CX;
     if (!cx) throw new ProviderError("GOOGLE_CSE_CX nao configurada no .env");
 
-    const data = await this._get(BASE_URL, { query: { key, cx, ...params } });
+    // Custom Search JSON API nao tem parametro de localizacao livre (so 'gl'
+    // por codigo de pais) — location vira parte do termo de busca mesmo,
+    // senao a API so ignora silenciosamente
+    const { location, ...rest } = params;
+    const q = location ? `${params.q} ${location}` : params.q;
+
+    const data = await this._get(BASE_URL, { query: { key, cx, ...rest, q } });
     return this._normalize(data);
   }
 

@@ -8,9 +8,16 @@ export class BingAdapter extends BaseAdapter {
   async search(engine, params) {
     if (engine !== "serp") throw new ProviderError("bing adapter aqui so suporta engine 'serp'");
     const key = this._requireKey();
+
+    // Bing v7 nao tem parametro de localizacao livre (so 'mkt', tipo
+    // "pt-BR") — location vira parte do termo de busca mesmo, senao a API
+    // so ignora silenciosamente
+    const { location, ...rest } = params;
+    const q = location ? `${params.q} ${location}` : params.q;
+
     const data = await this._get(BASE_URL, {
       headers: { "Ocp-Apim-Subscription-Key": key },
-      query: params,
+      query: { ...rest, q },
     });
     return this._normalize(data);
   }
