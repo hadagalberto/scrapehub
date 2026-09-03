@@ -1,7 +1,7 @@
 // Dashboard web: monitoramento de quota/uso e edicao de config em tempo real.
-import "dotenv/config";
+import dotenv from "dotenv";
 import express from "express";
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { loadConfig, CONFIG_PATH } from "./config.js";
@@ -10,11 +10,13 @@ import { Router } from "./gateway/router.js";
 import { ADAPTERS } from "./gateway/adapters/index.js";
 import { KEY_MAP, ALL_ENV_VARS } from "./gateway/keyMap.js";
 import { upsertEnvVar } from "./gateway/envFile.js";
+import { USER_ENV_PATH, USER_STORE_PATH } from "./gateway/paths.js";
+
+dotenv.config({ path: USER_ENV_PATH });
 
 const router = new Router();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ENV_PATH = join(__dirname, ".env");
 const PORT = process.env.DASHBOARD_PORT || 4545;
 
 const app = express();
@@ -30,8 +32,7 @@ function periodKeyFor(period) {
 }
 
 function getStore() {
-  const cfg = loadConfig();
-  return new GatewayStore(cfg.cache?.filePath ?? "gateway/data/store.json");
+  return new GatewayStore(USER_STORE_PATH);
 }
 
 app.get("/api/status", (_req, res) => {
@@ -78,7 +79,7 @@ app.put("/api/keys", (req, res) => {
   if (!envVar || !ALL_ENV_VARS.has(envVar)) {
     return res.status(400).json({ error: `envVar invalido: ${envVar}` });
   }
-  upsertEnvVar(ENV_PATH, envVar, value ?? "");
+  upsertEnvVar(USER_ENV_PATH, envVar, value ?? "");
   process.env[envVar] = value ?? "";
   res.json({ ok: true });
 });

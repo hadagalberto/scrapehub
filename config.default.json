@@ -15,7 +15,6 @@
     { "name": "scrapingbee_fetch", "engine": "fetch", "api": "scrapingbee", "monthlyQuota": 1000, "priority": 2, "enabled": true }
   ],
   "cache": {
-    "ttlSeconds": 21600,
-    "filePath": "gateway/data/store.json"
+    "ttlSeconds": 21600
   }
 }

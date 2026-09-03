@@ -1,21 +1,30 @@
 #!/usr/bin/env node
-// CLI de instalacao/boot. `npm install -g .` (ou `npm link` local) registra
-// o comando `scrapehub`, que sobe o dashboard e abre no navegador — igual
-// ao fluxo `npm install -g omniroute && omniroute`.
+// CLI de boot. `npm install -g scrapehub` registra o comando `scrapehub`,
+// que na primeira vez cria ~/.scrapehub (config + .env) e sobe o dashboard,
+// abrindo no navegador — igual ao fluxo `npm install -g omniroute && omniroute`.
 import { spawn } from "node:child_process";
-import { existsSync, copyFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { existsSync, mkdirSync, copyFileSync } from "node:fs";
+import { join } from "node:path";
+import {
+  PACKAGE_ROOT,
+  USER_DIR,
+  USER_ENV_PATH,
+  USER_CONFIG_PATH,
+  USER_DATA_DIR,
+  DEFAULT_CONFIG_PATH,
+  ENV_EXAMPLE_PATH,
+} from "../gateway/paths.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(__dirname, "..");
-const ENV_PATH = join(ROOT, ".env");
-const ENV_EXAMPLE_PATH = join(ROOT, ".env.example");
+function bootstrapUserDir() {
+  mkdirSync(USER_DATA_DIR, { recursive: true });
 
-function ensureEnvFile() {
-  if (!existsSync(ENV_PATH) && existsSync(ENV_EXAMPLE_PATH)) {
-    copyFileSync(ENV_EXAMPLE_PATH, ENV_PATH);
-    console.log("Criado .env a partir do .env.example — configure as chaves pelo dashboard.");
+  if (!existsSync(USER_CONFIG_PATH)) {
+    copyFileSync(DEFAULT_CONFIG_PATH, USER_CONFIG_PATH);
+  }
+  if (!existsSync(USER_ENV_PATH)) {
+    copyFileSync(ENV_EXAMPLE_PATH, USER_ENV_PATH);
+    console.log(`Primeira vez rodando — configuracao criada em ${USER_DIR}`);
+    console.log("Cole suas chaves de API pela tela de Configuracoes do dashboard.");
   }
 }
 
@@ -30,13 +39,13 @@ function openBrowser(url) {
 }
 
 function main() {
-  ensureEnvFile();
+  bootstrapUserDir();
 
   const port = process.env.DASHBOARD_PORT || 4545;
   const url = `http://localhost:${port}`;
 
-  const child = spawn(process.execPath, [join(ROOT, "server.js")], {
-    cwd: ROOT,
+  const child = spawn(process.execPath, [join(PACKAGE_ROOT, "server.js")], {
+    cwd: PACKAGE_ROOT,
     stdio: "inherit",
     env: process.env,
   });

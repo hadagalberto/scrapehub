@@ -1,10 +1,13 @@
 // Roteador: escolhe o provider certo pra um engine, respeita quota,
 // cai pro proximo em erro, usa cache quando disponivel.
-import "dotenv/config";
+import dotenv from "dotenv";
 import { loadConfig } from "../config.js";
 import { ADAPTERS } from "./adapters/index.js";
 import { ProviderError } from "./adapters/base.js";
 import { GatewayStore } from "./store.js";
+import { USER_ENV_PATH, USER_STORE_PATH } from "./paths.js";
+
+dotenv.config({ path: USER_ENV_PATH });
 
 function parseProvider(p) {
   const period = "dailyQuota" in p ? "daily" : "monthly";
@@ -19,12 +22,11 @@ function parseProvider(p) {
 export class Router {
   constructor() {
     this._adapterInstances = {};
-    this.store = null; // criado no primeiro loadConfig, filePath pode ser reconfigurado
+    this.store = new GatewayStore(USER_STORE_PATH);
   }
 
   _loadFresh() {
     const cfg = loadConfig();
-    if (!this.store) this.store = new GatewayStore(cfg.cache?.filePath ?? "gateway/data/store.json");
     return {
       providers: cfg.providers.map(parseProvider),
       cacheTtl: cfg.cache?.ttlSeconds ?? 0,

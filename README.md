@@ -11,15 +11,26 @@ Node puro, sem sqlite/build nativo.
 ## Instalar
 
 ```bash
+npm install -g scrapehub
+scrapehub
+```
+
+Sobe o dashboard e abre no navegador. Na primeira vez cria `~/.scrapehub/`
+(config, `.env`, cache) — nada fica dentro da pasta do pacote.
+
+### Rodando a partir do codigo-fonte
+
+```bash
+git clone https://github.com/hadagalberto/scrapehub.git
+cd scrapehub
 npm install
-npm link          # registra o comando `scrapehub` global
-scrapehub          # sobe o dashboard e abre no navegador
+npm link      # registra o comando `scrapehub` global apontando pra este clone
+scrapehub
 ```
 
 Ou sem instalar global:
 
 ```bash
-npm install
 npm run dashboard
 ```
 
@@ -69,15 +80,25 @@ for (const item of r.results) console.log(item.title, item.url);
    implementa `search(engine, params)` retornando lista normalizada
    `{ title, url, snippet, extra }`.
 2. Registra em `gateway/adapters/index.js`.
-3. Adiciona entrada em `config.json` com `engine`, `api`, quota e `priority`.
+3. Adiciona entrada em `config.default.json` com `engine`, `api`, quota e
+   `priority` (usuarios ja instalados editam pela tela de Configurações, que
+   grava em `~/.scrapehub/config.json`).
 4. Adiciona o campo de chave em `gateway/keyMap.js` (aparece automatico no
    dashboard, tela de Configurações).
 
+## Onde fica o dado do usuario
+
+Tudo em `~/.scrapehub/` (ou `$SCRAPEHUB_HOME`, se definida): `config.json`,
+`.env`, `data/store.json` (quota + cache + log). Nada e escrito dentro da
+pasta do pacote — importante pra instalacao global, que pode ser
+somente-leitura ou sumir num `npm update`.
+
 ## Quota e cache
 
-- Quota rastreada em `gateway/data/store.json`, reset automatico por dia/mes
-  conforme `dailyQuota`/`monthlyQuota` no config.
-- Cache por hash da query, TTL configuravel em `config.json` (`cache.ttlSeconds`).
+- Quota rastreada em `~/.scrapehub/data/store.json`, reset automatico por
+  dia/mes conforme `dailyQuota`/`monthlyQuota` no config.
+- Cache por hash da query, TTL configuravel na tela de Configurações
+  (`cache.ttlSeconds`).
 - `--no-cache` no CLI, `{ useCache: false }` no client, ou o checkbox no
   Playground pra forcar busca nova.
 

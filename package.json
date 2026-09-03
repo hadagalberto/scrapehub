@@ -7,10 +7,28 @@
   "bin": {
     "scrapehub": "./bin/scrapehub.js"
   },
+  "files": [
+    "bin",
+    "gateway",
+    "public",
+    "config.default.json",
+    ".env.example",
+    "main.js",
+    "server.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start": "node main.js",
-    "dashboard": "node server.js",
-    "postinstall": "node -e \"const fs=require('fs');if(!fs.existsSync('.env')&&fs.existsSync('.env.example'))fs.copyFileSync('.env.example','.env')\""
+    "dashboard": "node server.js"
+  },
+  "keywords": ["scraping", "serp", "gateway", "proxy", "hasdata", "serpapi", "dashboard", "leads"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hadagalberto/scrapehub.git"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
