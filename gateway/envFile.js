@@ -31,3 +31,36 @@ export function upsertEnvVar(path, key, value) {
   }
   writeFileSync(path, next.join("\n"));
 }
+
+// Uma env var pode guardar varias chaves do mesmo provider, separadas por
+// virgula (rotacao round-robin no adapter) — usado pra somar free tiers de
+// varias contas do mesmo provider.
+
+export function parseKeyList(raw) {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((k) => k.trim())
+    .filter(Boolean);
+}
+
+export function getKeyList(path, key) {
+  const map = readEnvFile(path);
+  return parseKeyList(map[key]);
+}
+
+export function addKey(path, key, value) {
+  const list = getKeyList(path, key);
+  if (!value || list.includes(value)) return list;
+  list.push(value);
+  upsertEnvVar(path, key, list.join(","));
+  return list;
+}
+
+export function removeKeyAt(path, key, index) {
+  const list = getKeyList(path, key);
+  if (index < 0 || index >= list.length) return list;
+  list.splice(index, 1);
+  upsertEnvVar(path, key, list.join(","));
+  return list;
+}

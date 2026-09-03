@@ -1,15 +1,23 @@
 // Contrato comum: todo adapter recebe (engine, params) e devolve lista
 // normalizada de resultados no schema {title, url, snippet, extra}.
+import { parseKeyList } from "../envFile.js";
 
 export class ProviderError extends Error {}
+
+// indice de rotacao por env var — em memoria, reseta a cada restart do
+// processo, o que e' aceitavel: so faz round-robin entre chaves da mesma
+// env var pra somar quota de varias contas do mesmo provider.
+const rotationIndex = new Map();
 
 export class BaseAdapter {
   apiKeyEnv = "";
 
   _requireKey() {
-    const key = process.env[this.apiKeyEnv];
-    if (!key) throw new ProviderError(`${this.apiKeyEnv} nao configurada no .env`);
-    return key;
+    const keys = parseKeyList(process.env[this.apiKeyEnv]);
+    if (keys.length === 0) throw new ProviderError(`${this.apiKeyEnv} nao configurada no .env`);
+    const next = (rotationIndex.get(this.apiKeyEnv) ?? -1) + 1;
+    rotationIndex.set(this.apiKeyEnv, next);
+    return keys[next % keys.length];
   }
 
   async search(_engine, _params) {

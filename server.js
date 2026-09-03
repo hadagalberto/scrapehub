@@ -9,7 +9,7 @@ import { GatewayStore } from "./gateway/store.js";
 import { Router } from "./gateway/router.js";
 import { ADAPTERS } from "./gateway/adapters/index.js";
 import { KEY_MAP, ALL_ENV_VARS } from "./gateway/keyMap.js";
-import { upsertEnvVar } from "./gateway/envFile.js";
+import { getKeyList, addKey, removeKeyAt } from "./gateway/envFile.js";
 import { USER_ENV_PATH, USER_STORE_PATH } from "./gateway/paths.js";
 
 dotenv.config({ path: USER_ENV_PATH });
@@ -65,23 +65,49 @@ app.get("/api/config", (_req, res) => {
   res.json(loadConfig());
 });
 
+function maskKey(value) {
+  if (value.length <= 8) return "••••" + value.slice(-2);
+  return `${value.slice(0, 4)}••••${value.slice(-4)}`;
+}
+
 app.get("/api/keys", (_req, res) => {
   const status = Object.entries(KEY_MAP).map(([api, fields]) => ({
     api,
-    fields: fields.map((f) => ({ ...f, configured: Boolean(process.env[f.envVar]) })),
-    configured: fields.every((f) => Boolean(process.env[f.envVar])),
+    fields: fields.map((f) => {
+      const keys = getKeyList(USER_ENV_PATH, f.envVar);
+      return {
+        ...f,
+        configured: keys.length > 0,
+        keys: keys.map((k, i) => ({ index: i, masked: maskKey(k) })),
+      };
+    }),
+    configured: fields.every((f) => getKeyList(USER_ENV_PATH, f.envVar).length > 0),
   }));
   res.json(status);
 });
 
-app.put("/api/keys", (req, res) => {
+app.post("/api/keys", (req, res) => {
   const { envVar, value } = req.body || {};
   if (!envVar || !ALL_ENV_VARS.has(envVar)) {
     return res.status(400).json({ error: `envVar invalido: ${envVar}` });
   }
-  upsertEnvVar(USER_ENV_PATH, envVar, value ?? "");
-  process.env[envVar] = value ?? "";
-  res.json({ ok: true });
+  if (!value || !value.trim()) {
+    return res.status(400).json({ error: "value vazio" });
+  }
+  const list = addKey(USER_ENV_PATH, envVar, value.trim());
+  process.env[envVar] = list.join(",");
+  res.json({ ok: true, count: list.length });
+});
+
+app.delete("/api/keys/:envVar/:index", (req, res) => {
+  const { envVar } = req.params;
+  const index = Number(req.params.index);
+  if (!ALL_ENV_VARS.has(envVar)) {
+    return res.status(400).json({ error: `envVar invalido: ${envVar}` });
+  }
+  const list = removeKeyAt(USER_ENV_PATH, envVar, index);
+  process.env[envVar] = list.join(",");
+  res.json({ ok: true, count: list.length });
 });
 
 app.put("/api/config", (req, res) => {

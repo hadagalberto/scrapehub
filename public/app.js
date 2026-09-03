@@ -265,28 +265,46 @@ document.getElementById("history-filter").addEventListener("change", renderHisto
 
 // ---- settings ----
 
+function renderKeyField(f) {
+  const rows = f.keys
+    .map(
+      (k) => `
+    <div class="key-row">
+      <span class="key-masked">${k.masked}</span>
+      <button class="key-remove" data-remove-envvar="${f.envVar}" data-remove-index="${k.index}" title="Remover">✕</button>
+    </div>
+  `
+    )
+    .join("");
+
+  return `
+    <div class="key-field">
+      <label>
+        ${f.label}
+        ${f.docsUrl ? `<a href="${f.docsUrl}" target="_blank" rel="noopener" class="docs-link">pegar chave ↗</a>` : ""}
+      </label>
+      ${rows || '<div class="key-row-empty muted">nenhuma chave cadastrada</div>'}
+      <div class="key-field-row">
+        <input type="password" data-envvar="${f.envVar}" placeholder="colar nova chave" />
+        <button data-add="${f.envVar}">+ Adicionar</button>
+      </div>
+    </div>
+  `;
+}
+
 function renderKeyCard(k) {
   const div = document.createElement("div");
   div.className = "key-card";
-  const statusPill = k.configured ? '<span class="pill ok">ok</span>' : '<span class="pill danger">faltando</span>';
+  const total = k.fields.reduce((sum, f) => sum + f.keys.length, 0);
+  const statusPill = k.configured
+    ? `<span class="pill ok">${total} chave${total === 1 ? "" : "s"}</span>`
+    : '<span class="pill danger">faltando</span>';
   div.innerHTML = `
     <div class="key-card-header">
       <span class="api-name">${k.api}</span>
       ${statusPill}
     </div>
-    ${k.fields
-      .map(
-        (f) => `
-      <div class="key-field">
-        <label>${f.label} ${f.configured ? "✓" : ""}</label>
-        <div class="key-field-row">
-          <input type="password" data-envvar="${f.envVar}" placeholder="${f.configured ? "•••••••• (salva)" : "cole aqui"}" />
-          <button data-save="${f.envVar}">Salvar</button>
-        </div>
-      </div>
-    `
-      )
-      .join("")}
+    ${k.fields.map(renderKeyField).join("")}
   `;
   return div;
 }
@@ -318,19 +336,35 @@ function renderSettings() {
 }
 
 document.getElementById("keys-grid").addEventListener("click", async (e) => {
-  const envVar = e.target.dataset.save;
-  if (!envVar) return;
-  const input = document.querySelector(`input[data-envvar="${envVar}"]`);
-  const value = input.value.trim();
-  if (!value) return;
-  e.target.disabled = true;
-  e.target.textContent = "...";
-  await fetch("/api/keys", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ envVar, value }),
-  });
-  loadPage("settings");
+  const addEnvVar = e.target.dataset.add;
+  if (addEnvVar) {
+    const input = document.querySelector(`input[data-envvar="${addEnvVar}"]`);
+    const value = input.value.trim();
+    if (!value) return;
+    e.target.disabled = true;
+    e.target.textContent = "...";
+    await fetch("/api/keys", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ envVar: addEnvVar, value }),
+    });
+    loadPage("settings");
+    return;
+  }
+
+  const removeEnvVar = e.target.dataset.removeEnvvar;
+  if (removeEnvVar !== undefined) {
+    const index = e.target.dataset.removeIndex;
+    await fetch(`/api/keys/${removeEnvVar}/${index}`, { method: "DELETE" });
+    loadPage("settings");
+  }
+});
+
+document.getElementById("keys-grid").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target.dataset.envvar) {
+    e.preventDefault();
+    document.querySelector(`button[data-add="${e.target.dataset.envvar}"]`)?.click();
+  }
 });
 
 document.getElementById("settings-providers-body").addEventListener("click", async (e) => {
@@ -396,4 +430,9 @@ document.getElementById("clear-cache").addEventListener("click", async () => {
 
 if (!location.hash) location.hash = "#/overview";
 renderPage();
-setInterval(() => loadPage(currentPage()), 8000);
+setInterval(() => {
+  // settings recria o HTML dos inputs a cada load — auto-refresh no meio
+  // de uma digitacao apaga o que a pessoa tava escrevendo
+  if (currentPage() === "settings") return;
+  loadPage(currentPage());
+}, 8000);
