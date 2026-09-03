@@ -10,9 +10,14 @@ export class OutscraperAdapter extends BaseAdapter {
   async search(engine, params) {
     if (engine !== "maps") throw new ProviderError("outscraper adapter aqui so suporta engine 'maps'");
     const key = this._requireKey();
+    // outscraper nao tem parametro de localizacao separado — o termo de busca
+    // e' o unico jeito de localizar (ex: "pizzaria, Santana - BA")
+    const { q, location, ...rest } = params;
+    const query = location ? `${q}, ${location}` : q;
+
     const data = await this._get(BASE_URL, {
       headers: { "X-API-KEY": key },
-      query: { query: params.q, ...params },
+      query: { query, ...rest },
     });
     return this._normalize(data);
   }

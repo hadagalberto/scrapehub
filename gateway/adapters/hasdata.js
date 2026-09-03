@@ -19,9 +19,20 @@ export class HasDataAdapter extends BaseAdapter {
 
     const data = await this._get(BASE_URL + path, {
       headers: { "x-api-key": key },
-      query: params,
+      query: this._buildQuery(engine, params),
     });
     return this._normalize(engine, data);
+  }
+
+  _buildQuery(engine, params) {
+    // o endpoint de maps do hasdata nao tem parametro de localizacao livre
+    // (so 'q' e 'll' com lat/lng) — location precisa ir dentro do termo
+    // de busca mesmo, senao a api ignora e cai num default (ex: NYC)
+    if (engine === "maps" && params.location) {
+      const { location, ...rest } = params;
+      return { ...rest, q: `${params.q} ${location}` };
+    }
+    return params;
   }
 
   _normalize(engine, data) {
