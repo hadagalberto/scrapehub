@@ -1,0 +1,19 @@
+{
+  "name": "scrapehub",
+  "version": "1.0.0",
+  "description": "Gateway multi-provider de scraping/SERP com dashboard de monitoramento — fallback automatico, quota tracking e cache",
+  "type": "module",
+  "main": "main.js",
+  "bin": {
+    "scrapehub": "./bin/scrapehub.js"
+  },
+  "scripts": {
+    "start": "node main.js",
+    "dashboard": "node server.js",
+    "postinstall": "node -e \"const fs=require('fs');if(!fs.existsSync('.env')&&fs.existsSync('.env.example'))fs.copyFileSync('.env.example','.env')\""
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^5.2.1"
+  }
+}

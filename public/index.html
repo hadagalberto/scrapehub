@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>ScrapeHub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">◆</span>
+        <span class="brand-name">ScrapeHub</span>
+      </div>
+      <nav>
+        <a href="#/overview" data-nav="overview">Overview</a>
+        <a href="#/playground" data-nav="playground">Playground</a>
+        <a href="#/analytics" data-nav="analytics">Analytics</a>
+        <a href="#/history" data-nav="history">Histórico</a>
+        <a href="#/settings" data-nav="settings">Configurações</a>
+      </nav>
+      <div class="sidebar-footer muted">v1.0 · local</div>
+    </aside>
+
+    <div class="content">
+      <header class="topbar">
+        <h1 id="page-title">Overview</h1>
+        <div class="header-actions">
+          <span id="cache-info" class="muted"></span>
+          <button id="clear-cache">Limpar cache</button>
+          <button id="refresh">Atualizar</button>
+        </div>
+      </header>
+
+      <main>
+        <!-- Overview -->
+        <section class="page" id="page-overview">
+          <div class="stats-row" id="stats-row"></div>
+          <section class="panel">
+            <h2>Providers</h2>
+            <table id="providers-table">
+              <thead>
+                <tr>
+                  <th>Ativo</th><th>Provider</th><th>Engine</th><th>API</th><th>Chave</th><th>Uso</th>
+                </tr>
+              </thead>
+              <tbody id="providers-body"></tbody>
+            </table>
+          </section>
+        </section>
+
+        <!-- Playground -->
+        <section class="page" id="page-playground" hidden>
+          <div class="grid">
+            <section class="panel">
+              <h2>Nova busca</h2>
+              <form id="playground-form">
+                <label>
+                  Engine
+                  <select id="pg-engine"></select>
+                </label>
+                <label>
+                  Query
+                  <input id="pg-query" type="text" placeholder="pizzaria" />
+                </label>
+                <label>
+                  Location <span class="muted">(opcional)</span>
+                  <input id="pg-location" type="text" placeholder="Sao Paulo, BR" />
+                </label>
+                <label class="checkbox-label">
+                  <input id="pg-nocache" type="checkbox" /> ignorar cache
+                </label>
+                <button type="submit">Buscar</button>
+              </form>
+            </section>
+            <section class="panel">
+              <h2>Resultado</h2>
+              <pre id="pg-result" class="result-box">Resultado aparece aqui.</pre>
+            </section>
+          </div>
+        </section>
+
+        <!-- Analytics -->
+        <section class="page" id="page-analytics" hidden>
+          <div class="stats-row" id="analytics-stats-row"></div>
+          <div class="grid-2">
+            <section class="panel">
+              <h2>Requests por hora (24h)</h2>
+              <div id="timeline-chart" class="timeline-chart"></div>
+            </section>
+            <section class="panel">
+              <h2>Sucesso vs falha (24h)</h2>
+              <div class="donut-wrap">
+                <div id="donut" class="donut"></div>
+                <div id="donut-legend" class="donut-legend"></div>
+              </div>
+            </section>
+          </div>
+          <section class="panel">
+            <h2>Por engine (24h)</h2>
+            <div id="engine-bars" class="engine-bars"></div>
+          </section>
+        </section>
+
+        <!-- History -->
+        <section class="page" id="page-history" hidden>
+          <section class="panel">
+            <div class="panel-header-row">
+              <h2>Histórico de requests</h2>
+              <select id="history-filter">
+                <option value="">Todos engines</option>
+              </select>
+            </div>
+            <table id="logs-table">
+              <thead>
+                <tr><th>Quando</th><th>Engine</th><th>Provider</th><th>Query</th><th>Cache</th><th>Status</th></tr>
+              </thead>
+              <tbody id="logs-body"></tbody>
+            </table>
+          </section>
+        </section>
+
+        <!-- Settings -->
+        <section class="page" id="page-settings" hidden>
+          <section class="panel">
+            <h2>Chaves de API</h2>
+            <div id="keys-grid" class="keys-grid"></div>
+          </section>
+
+          <section class="panel">
+            <h2>Providers &amp; quotas</h2>
+            <table id="settings-providers-table">
+              <thead>
+                <tr>
+                  <th>Ativo</th><th>Provider</th><th>Engine</th><th>API</th><th>Prioridade</th><th>Quota</th><th>Período</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="settings-providers-body"></tbody>
+            </table>
+          </section>
+
+          <section class="panel">
+            <h2>Zona de risco</h2>
+            <div class="danger-row">
+              <span class="muted">Zera todo o uso de todos os providers (nao afeta cache).</span>
+              <button id="reset-all-usage" class="danger-btn">Zerar todo o uso</button>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

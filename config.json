@@ -1,0 +1,21 @@
+{
+  "providers": [
+    { "name": "hasdata_maps", "engine": "maps", "api": "hasdata", "monthlyQuota": 1000, "priority": 1, "enabled": true },
+    { "name": "outscraper_maps", "engine": "maps", "api": "outscraper", "monthlyQuota": 500, "priority": 2, "enabled": true },
+
+    { "name": "hasdata_serp", "engine": "serp", "api": "hasdata", "monthlyQuota": 1000, "priority": 1, "enabled": true },
+    { "name": "serpapi_serp", "engine": "serp", "api": "serpapi", "monthlyQuota": 100, "priority": 2, "enabled": true },
+    { "name": "brave_serp", "engine": "serp", "api": "brave", "monthlyQuota": 2000, "priority": 3, "enabled": true },
+    { "name": "bing_serp", "engine": "serp", "api": "bing", "monthlyQuota": 1000, "priority": 4, "enabled": true },
+
+    { "name": "google_cse_web", "engine": "web", "api": "google_cse", "dailyQuota": 100, "priority": 1, "enabled": true },
+    { "name": "brave_web", "engine": "web", "api": "brave", "monthlyQuota": 2000, "priority": 2, "enabled": true },
+
+    { "name": "scraperapi_fetch", "engine": "fetch", "api": "scraperapi", "monthlyQuota": 5000, "priority": 1, "enabled": true },
+    { "name": "scrapingbee_fetch", "engine": "fetch", "api": "scrapingbee", "monthlyQuota": 1000, "priority": 2, "enabled": true }
+  ],
+  "cache": {
+    "ttlSeconds": 21600,
+    "filePath": "gateway/data/store.json"
+  }
+}
