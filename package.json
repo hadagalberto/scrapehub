@@ -24,7 +24,7 @@
   },
   "scripts": {
     "start": "node main.js",
-    "dashboard": "node server.js"
+    "dashboard": "node bin/scrapehub.js"
   },
   "keywords": [
     "scraping",
