@@ -1,16 +1,17 @@
 {
   "name": "scrapehub",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Gateway multi-provider de scraping/SERP com dashboard de monitoramento — fallback automatico, quota tracking e cache",
   "type": "module",
   "main": "main.js",
   "bin": {
-    "scrapehub": "./bin/scrapehub.js"
+    "scrapehub": "bin/scrapehub.js"
   },
   "files": [
     "bin",
     "gateway",
     "public",
+    "config.js",
     "config.default.json",
     ".env.example",
     "main.js",
@@ -24,7 +25,16 @@
     "start": "node main.js",
     "dashboard": "node server.js"
   },
-  "keywords": ["scraping", "serp", "gateway", "proxy", "hasdata", "serpapi", "dashboard", "leads"],
+  "keywords": [
+    "scraping",
+    "serp",
+    "gateway",
+    "proxy",
+    "hasdata",
+    "serpapi",
+    "dashboard",
+    "leads"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
