@@ -1,11 +1,12 @@
 {
   "name": "scrapehub",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Gateway multi-provider de scraping/SERP com dashboard de monitoramento — fallback automatico, quota tracking e cache",
   "type": "module",
   "main": "main.js",
   "bin": {
-    "scrapehub": "bin/scrapehub.js"
+    "scrapehub": "bin/scrapehub.js",
+    "scrapehub-mcp": "bin/mcp.js"
   },
   "files": [
     "bin",
@@ -33,7 +34,10 @@
     "hasdata",
     "serpapi",
     "dashboard",
-    "leads"
+    "leads",
+    "mcp",
+    "model-context-protocol",
+    "ai-agent"
   ],
   "license": "MIT",
   "repository": {
@@ -41,7 +45,9 @@
     "url": "git+https://github.com/hadagalberto/scrapehub.git"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "dotenv": "^16.4.5",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "zod": "^4.5.4"
   }
 }

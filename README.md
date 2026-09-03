@@ -48,6 +48,47 @@ Dashboard em `http://localhost:4545`.
 Chave salva na tela de Configurações grava no `.env` e aplica na hora, sem
 precisar reiniciar o processo.
 
+## MCP — usar com agentes de IA
+
+Expoe a busca como tool MCP (stdio), pra Claude Code, Claude Desktop, Cursor,
+etc chamarem direto, sem passar por HTTP.
+
+**Claude Code:**
+
+```bash
+claude mcp add scrapehub -- scrapehub-mcp
+```
+
+**Claude Desktop** (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "scrapehub": {
+      "command": "scrapehub-mcp"
+    }
+  }
+}
+```
+
+Tools expostas:
+
+- `scrapehub_search` — `{ engine: "maps"|"serp"|"web"|"fetch", q?, url?, location?, useCache? }`
+- `scrapehub_list_providers` — lista providers configurados e status
+
+Usa as mesmas chaves/config de `~/.scrapehub/` do dashboard — configura por
+la e o MCP ja usa.
+
+## API HTTP
+
+Com o dashboard rodando, tambem da pra chamar via REST:
+
+```bash
+curl -X POST http://localhost:4545/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"engine":"maps","q":"pizzaria","location":"Sao Paulo, BR"}'
+```
+
 ## Uso via CLI
 
 ```bash

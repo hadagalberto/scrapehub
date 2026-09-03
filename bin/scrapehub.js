@@ -38,7 +38,18 @@ function openBrowser(url) {
   spawn(cmd, [url], { stdio: "ignore", detached: true }).unref();
 }
 
-function main() {
+function runMcp() {
+  // delega pro bin/mcp.js — stdio precisa ficar limpo (so protocolo MCP),
+  // nao pode ter console.log de bootstrap misturado no stdout
+  const child = spawn(process.execPath, [join(PACKAGE_ROOT, "bin", "mcp.js")], {
+    cwd: PACKAGE_ROOT,
+    stdio: "inherit",
+    env: process.env,
+  });
+  child.on("exit", (code) => process.exit(code ?? 0));
+}
+
+function runDashboard() {
   bootstrapUserDir();
 
   const port = process.env.DASHBOARD_PORT || 4545;
@@ -55,6 +66,12 @@ function main() {
   child.on("exit", (code) => process.exit(code ?? 0));
   process.on("SIGINT", () => child.kill("SIGINT"));
   process.on("SIGTERM", () => child.kill("SIGTERM"));
+}
+
+function main() {
+  const sub = process.argv[2];
+  if (sub === "mcp") return runMcp();
+  runDashboard();
 }
 
 main();
