@@ -22,22 +22,29 @@ export function createServer() {
 
   server.tool(
     "scrapehub_search",
-    "Busca via ScrapeHub — roteia entre providers configurados (SerpApi, HasData, Bing, Brave, Google CSE, Outscraper) com fallback automatico e cache. Engines: 'maps' (Google Maps/negocios), 'serp' (resultado de busca Google), 'web' (busca web generica), 'fetch' (baixa uma URL crua, precisa de 'url' em vez de 'q').",
+    "Busca via ScrapeHub — roteia entre providers configurados com fallback automatico e cache. " +
+      "Engines: 'maps' (Google Maps/negocios, usa q+location), 'serp' (busca Google, usa q+location), " +
+      "'web' (busca web generica, usa q+location), 'fetch' (baixa HTML cru de uma URL, usa url), " +
+      "'instagram' (perfil publico + posts recentes, usa handle sem @), " +
+      "'youtube' (usa mode: 'search' com q, 'video' com v, ou 'channel' com channelId), " +
+      "'amazon' (usa q pra busca ou asin pra produto especifico), " +
+      "'shopify' (lista produtos de uma loja publica, usa url da loja).",
     {
-      engine: z.enum(["maps", "serp", "web", "fetch"]).describe("Tipo de busca"),
-      q: z.string().optional().describe("Termo de busca (obrigatorio pra maps/serp/web)"),
-      url: z.string().optional().describe("URL a buscar (obrigatorio pra engine 'fetch')"),
-      location: z.string().optional().describe("Localizacao, ex: 'Sao Paulo, BR' (usado por maps/serp)"),
+      engine: z.enum(["maps", "serp", "web", "fetch", "instagram", "youtube", "amazon", "shopify"]).describe("Tipo de busca"),
+      q: z.string().optional().describe("Termo de busca (maps/serp/web/youtube-search/amazon-search)"),
+      url: z.string().optional().describe("URL alvo (fetch) ou URL da loja (shopify)"),
+      location: z.string().optional().describe("Localizacao informal, ex: 'Sao Paulo, BR' (maps/serp/web)"),
+      handle: z.string().optional().describe("Usuario do Instagram, sem @ (instagram)"),
+      mode: z.enum(["search", "video", "channel"]).optional().describe("Modo do youtube"),
+      v: z.string().optional().describe("ID do video do YouTube (youtube, mode='video')"),
+      channelId: z.string().optional().describe("ID ou @handle do canal (youtube, mode='channel')"),
+      asin: z.string().optional().describe("ASIN do produto Amazon (amazon, busca produto especifico)"),
       useCache: z.boolean().optional().default(true).describe("Usa cache local se disponivel"),
     },
-    async ({ engine, q, url, location, useCache }) => {
+    async ({ engine, useCache, ...rest }) => {
       try {
-        const result = await router.search(engine, {
-          useCache,
-          ...(q ? { q } : {}),
-          ...(url ? { url } : {}),
-          ...(location ? { location } : {}),
-        });
+        const params = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined));
+        const result = await router.search(engine, { useCache, ...params });
         return textResult(result);
       } catch (e) {
         return errorResult(e.message);

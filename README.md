@@ -73,7 +73,8 @@ claude mcp add scrapehub -- scrapehub-mcp
 
 Tools expostas:
 
-- `scrapehub_search` — `{ engine: "maps"|"serp"|"web"|"fetch", q?, url?, location?, useCache? }`
+- `scrapehub_search` — `{ engine, q?, url?, location?, handle?, mode?, v?, channelId?, asin?, useCache? }`
+  (campos usados dependem do `engine` — ver tabela de Providers abaixo)
 - `scrapehub_list_providers` — lista providers configurados e status
 
 Usa as mesmas chaves/config de `~/.scrapehub/` do dashboard — configura por
@@ -108,12 +109,16 @@ for (const item of r.results) console.log(item.title, item.url);
 
 ## Providers configurados
 
-| Engine  | Providers                                    |
-|---------|-----------------------------------------------|
-| maps    | HasData, Outscraper                           |
-| serp    | HasData, SerpApi, Brave, Bing                 |
-| web     | Google CSE, Brave                             |
-| fetch   | ScraperAPI, ScrapingBee (HTML cru, com JS opcional) |
+| Engine     | Providers | Params principais |
+|------------|-----------|--------------------|
+| maps       | HasData, Outscraper | `q`, `location?` |
+| serp       | HasData, SerpApi, Brave, Bing | `q`, `location?` |
+| web        | Google CSE, Brave | `q`, `location?` |
+| fetch      | ScraperAPI, ScrapingBee | `url` (HTML cru, JS opcional) |
+| instagram  | HasData | `handle` (perfil + posts recentes) |
+| youtube    | HasData | `mode`: `search` (`q`), `video` (`v`), `channel` (`channelId`) |
+| amazon     | HasData | `q` (busca) ou `asin` (produto especifico) |
+| shopify    | HasData | `url` da loja (best-effort, nao testado ao vivo) |
 
 ## Como adicionar um provider novo
 

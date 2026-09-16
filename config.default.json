@@ -12,7 +12,12 @@
     { "name": "brave_web", "engine": "web", "api": "brave", "monthlyQuota": 2000, "priority": 2, "enabled": true },
 
     { "name": "scraperapi_fetch", "engine": "fetch", "api": "scraperapi", "monthlyQuota": 5000, "priority": 1, "enabled": true },
-    { "name": "scrapingbee_fetch", "engine": "fetch", "api": "scrapingbee", "monthlyQuota": 1000, "priority": 2, "enabled": true }
+    { "name": "scrapingbee_fetch", "engine": "fetch", "api": "scrapingbee", "monthlyQuota": 1000, "priority": 2, "enabled": true },
+
+    { "name": "hasdata_instagram", "engine": "instagram", "api": "hasdata", "monthlyQuota": 1000, "priority": 1, "enabled": true },
+    { "name": "hasdata_youtube", "engine": "youtube", "api": "hasdata", "monthlyQuota": 1000, "priority": 1, "enabled": true },
+    { "name": "hasdata_amazon", "engine": "amazon", "api": "hasdata", "monthlyQuota": 1000, "priority": 1, "enabled": true },
+    { "name": "hasdata_shopify", "engine": "shopify", "api": "hasdata", "monthlyQuota": 1000, "priority": 1, "enabled": true }
   ],
   "cache": {
     "ttlSeconds": 21600

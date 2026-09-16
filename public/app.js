@@ -141,19 +141,45 @@ document.getElementById("providers-body").addEventListener("click", async (e) =>
 
 // ---- playground ----
 
+const ENGINE_FIELDS = {
+  maps: { label: "Query", placeholder: "pizzaria", param: "q", showLocation: true },
+  serp: { label: "Query", placeholder: "melhores agencias de marketing", param: "q", showLocation: true },
+  web: { label: "Query", placeholder: "python asyncio tutorial", param: "q", showLocation: true },
+  fetch: { label: "URL", placeholder: "https://exemplo.com", param: "url", showLocation: false },
+  instagram: { label: "Usuario (handle, sem @)", placeholder: "nike", param: "handle", showLocation: false },
+  youtube: { label: "Query", placeholder: "lofi hip hop", param: "q", showLocation: false },
+  amazon: { label: "Query", placeholder: "fone bluetooth", param: "q", showLocation: false },
+  shopify: { label: "URL da loja", placeholder: "https://loja.myshopify.com", param: "url", showLocation: false },
+};
+
+function updatePlaygroundFields() {
+  const engine = document.getElementById("pg-engine").value;
+  const cfg = ENGINE_FIELDS[engine] || ENGINE_FIELDS.maps;
+  const queryLabel = document.getElementById("pg-query-label");
+  const queryInput = document.getElementById("pg-query");
+  const locationLabel = document.getElementById("pg-location-label");
+
+  queryLabel.childNodes[0].textContent = cfg.label + " ";
+  queryInput.placeholder = cfg.placeholder;
+  locationLabel.style.display = cfg.showLocation ? "" : "none";
+}
+
 function renderPlayground() {
   const select = document.getElementById("pg-engine");
   if (!select.dataset.loaded) {
     select.innerHTML = cachedStats.availableEngines.map((e) => `<option value="${e}">${e}</option>`).join("");
     select.dataset.loaded = "1";
+    select.addEventListener("change", updatePlaygroundFields);
   }
+  updatePlaygroundFields();
 }
 
 document.getElementById("playground-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const resultBox = document.getElementById("pg-result");
   const engine = document.getElementById("pg-engine").value;
-  const q = document.getElementById("pg-query").value;
+  const fieldCfg = ENGINE_FIELDS[engine] || ENGINE_FIELDS.maps;
+  const queryValue = document.getElementById("pg-query").value;
   const location = document.getElementById("pg-location").value;
   const noCache = document.getElementById("pg-nocache").checked;
 
@@ -162,7 +188,12 @@ document.getElementById("playground-form").addEventListener("submit", async (e) 
     const res = await fetch("/api/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ engine, q, location: location || undefined, useCache: !noCache }),
+      body: JSON.stringify({
+        engine,
+        [fieldCfg.param]: queryValue,
+        location: fieldCfg.showLocation && location ? location : undefined,
+        useCache: !noCache,
+      }),
     });
     const data = await res.json();
     resultBox.textContent = JSON.stringify(data, null, 2);

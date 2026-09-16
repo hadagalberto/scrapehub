@@ -24,7 +24,7 @@ export class BaseAdapter {
     throw new Error("nao implementado");
   }
 
-  async _get(url, { headers = {}, query = {}, timeoutMs = 15000 } = {}) {
+  async _get(url, { headers = {}, query = {}, timeoutMs = 25000 } = {}) {
     const fullUrl = new URL(url);
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined && v !== null) fullUrl.searchParams.set(k, v);
