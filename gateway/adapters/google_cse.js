@@ -6,7 +6,7 @@ export class GoogleCseAdapter extends BaseAdapter {
   apiKeyEnv = "GOOGLE_CSE_API_KEY";
 
   async search(engine, params) {
-    if (engine !== "web") throw new ProviderError("google_cse so suporta engine 'web'");
+    if (engine !== "web" && engine !== "serp") throw new ProviderError("google_cse so suporta engine 'web' ou 'serp'");
     const key = this._requireKey();
     const cx = process.env.GOOGLE_CSE_CX;
     if (!cx) throw new ProviderError("GOOGLE_CSE_CX nao configurada no .env");

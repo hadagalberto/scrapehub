@@ -42,6 +42,27 @@ export class Router {
     return this._adapterInstances[apiName];
   }
 
+  // Se a chave atual deu 429/sem credito, tenta as outras chaves do mesmo
+  // provider (round-robin ja avanca sozinho no _requireKey) antes de cair
+  // pro proximo provider — igual OmniRoute faz com chaves de LLM.
+  async _searchWithKeyRotation(provider, engine, params) {
+    const adapter = this._adapterFor(provider.api);
+    const attempts = Math.max(1, adapter.keyCount());
+    const keyErrors = [];
+
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await adapter.search(engine, params);
+      } catch (e) {
+        if (!(e instanceof ProviderError) || !e.retryNextKey || i === attempts - 1) {
+          if (keyErrors.length) keyErrors.push(`chave ${i + 1}: ${e.message}`);
+          throw keyErrors.length ? new ProviderError(keyErrors.join("; ")) : e;
+        }
+        keyErrors.push(`chave ${i + 1}: ${e.message}`);
+      }
+    }
+  }
+
   async search(engine, { useCache = true, ...params } = {}) {
     const { providers, cacheTtl } = this._loadFresh();
     const candidates = providers
@@ -62,7 +83,7 @@ export class Router {
         }
       }
 
-      const used = this.store.getUsage(provider.name, provider.period);
+      const used = this.store.getUsage(provider.api, provider.period);
       if (used >= provider.quota) {
         errors.push(`${provider.name}: quota esgotada (${used}/${provider.quota})`);
         continue;
@@ -70,14 +91,13 @@ export class Router {
 
       let results;
       try {
-        const adapter = this._adapterFor(provider.api);
-        results = await adapter.search(engine, params);
+        results = await this._searchWithKeyRotation(provider, engine, params);
       } catch (e) {
         errors.push(`${provider.name}: ${e.message}`);
         continue;
       }
 
-      this.store.incrementUsage(provider.name, provider.period);
+      this.store.incrementUsage(provider.api, provider.period);
       if (useCache && cacheTtl) this.store.setCached(cacheKey, provider.name, results);
       this.store.logRequest({ engine, provider: provider.name, cached: false, ok: true, query: params.q ?? null, count: results.length });
 

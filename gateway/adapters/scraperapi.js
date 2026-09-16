@@ -1,36 +1,74 @@
-// ScraperAPI — fetch generico com renderizacao opcional. Bom fallback pra
-// paginas que nao sao SERP estruturado (ele devolve o HTML cru).
+// ScraperAPI — fetch generico (HTML cru) + endpoints estruturados (Google
+// Search, Amazon). Engine 'fetch' confirmado pela doc; os estruturados sao
+// best-effort ate ter chave pra testar ao vivo:
+// https://docs.scraperapi.com/making-requests/structured-data-collection-method
 import { BaseAdapter, ProviderError } from "./base.js";
 
-const BASE_URL = "https://api.scraperapi.com";
+const BASE = "https://api.scraperapi.com";
 
 export class ScraperApiAdapter extends BaseAdapter {
   apiKeyEnv = "SCRAPERAPI_API_KEY";
 
   async search(engine, params) {
-    if (engine !== "fetch") throw new ProviderError("scraperapi so suporta engine 'fetch' (params: { url })");
     const key = this._requireKey();
-    if (!params.url) throw new ProviderError("scraperapi precisa de params.url");
 
-    const data = await this._getRaw(BASE_URL, { query: { api_key: key, url: params.url, render: params.render ?? "false" } });
-    return [{ title: null, url: params.url, snippet: null, extra: { html: data } }];
+    switch (engine) {
+      case "fetch": {
+        if (!params.url) throw new ProviderError("scraperapi fetch precisa de params.url");
+        const html = await this._getText(BASE, {
+          query: { api_key: key, url: params.url, render: params.render ?? "false" },
+        });
+        return [{ title: null, url: params.url, snippet: null, extra: { html } }];
+      }
+
+      case "serp":
+      case "web": {
+        const query = params.location ? `${params.q} ${params.location}` : params.q;
+        const data = await this._get(`${BASE}/structured/google/search`, {
+          query: { api_key: key, query, country_code: params.gl },
+        });
+        return (data.organic_results || []).map((r) => ({
+          title: r.title,
+          url: r.link || r.url,
+          snippet: r.snippet,
+          extra: r,
+        }));
+      }
+
+      case "amazon": {
+        const tld = this._amazonTld(params.domain);
+        if (params.asin) {
+          const p = await this._get(`${BASE}/structured/amazon/product`, {
+            query: { api_key: key, asin: params.asin, tld },
+          });
+          return [{
+            title: p.name || p.title,
+            url: p.url || `https://www.amazon.${tld}/dp/${params.asin}`,
+            snippet: p.pricing || p.price || null,
+            extra: p,
+          }];
+        }
+        if (!params.q) throw new ProviderError("scraperapi amazon precisa de params.q ou params.asin");
+        const data = await this._get(`${BASE}/structured/amazon/search`, {
+          query: { api_key: key, query: params.q, tld },
+        });
+        return (data.results || []).map((r) => ({
+          title: r.name || r.title,
+          url: r.url,
+          snippet: r.price_string || r.price || null,
+          extra: r,
+        }));
+      }
+
+      default:
+        throw new ProviderError(`scraperapi nao suporta engine '${engine}'`);
+    }
   }
 
-  async _getRaw(url, { query = {}, timeoutMs = 20000 } = {}) {
-    const fullUrl = new URL(url);
-    for (const [k, v] of Object.entries(query)) fullUrl.searchParams.set(k, v);
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    let resp;
-    try {
-      resp = await fetch(fullUrl, { signal: controller.signal });
-    } catch (e) {
-      throw new ProviderError(`erro de rede: ${e.message}`);
-    } finally {
-      clearTimeout(timer);
-    }
-    if (resp.status === 429) throw new ProviderError("rate limited (429)");
-    if (resp.status >= 400) throw new ProviderError(`http ${resp.status}`);
-    return resp.text();
+  // nosso param 'domain' segue o estilo hasdata ("www.amazon.com.br");
+  // scraperapi quer so o tld ("com.br")
+  _amazonTld(domain) {
+    if (!domain) return "com";
+    return domain.replace(/^www\.amazon\./, "").replace(/^amazon\./, "");
   }
 }

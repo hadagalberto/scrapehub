@@ -356,10 +356,43 @@ function renderSettingsProviderRow(p) {
   return tr;
 }
 
+function renderFallbackCards() {
+  const grid = document.getElementById("fallback-grid");
+  grid.innerHTML = "";
+
+  const byEngine = {};
+  for (const p of cachedStatus.providers) (byEngine[p.engine] ||= []).push(p);
+
+  for (const [engine, list] of Object.entries(byEngine)) {
+    list.sort((a, b) => a.priority - b.priority);
+    const card = document.createElement("div");
+    card.className = "fallback-card";
+    card.dataset.engine = engine;
+    card.innerHTML =
+      `<h3>${engine}</h3>` +
+      list
+        .map((p, i) => {
+          const key = keyPillFor(p.api);
+          return `
+        <div class="fallback-row ${p.enabled ? "" : "disabled-row"}" data-name="${p.name}">
+          <span class="fallback-pos">${i + 1}</span>
+          <span class="fallback-name">${p.name}</span>
+          ${key}
+          <button data-move="up" ${i === 0 ? "disabled" : ""} title="Subir">↑</button>
+          <button data-move="down" ${i === list.length - 1 ? "disabled" : ""} title="Descer">↓</button>
+        </div>`;
+        })
+        .join("");
+    grid.appendChild(card);
+  }
+}
+
 function renderSettings() {
   const grid = document.getElementById("keys-grid");
   grid.innerHTML = "";
   for (const k of cachedKeys) grid.appendChild(renderKeyCard(k));
+
+  renderFallbackCards();
 
   const tbody = document.getElementById("settings-providers-body");
   tbody.innerHTML = "";
@@ -439,6 +472,27 @@ document.getElementById("settings-providers-body").addEventListener("change", as
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(cfg),
+  });
+  loadPage("settings");
+});
+
+document.getElementById("fallback-grid").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-move]");
+  if (!btn || btn.disabled) return;
+  const row = btn.closest(".fallback-row");
+  const card = btn.closest(".fallback-card");
+  const rows = [...card.querySelectorAll(".fallback-row")];
+  const idx = rows.indexOf(row);
+  const swapWith = btn.dataset.move === "up" ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= rows.length) return;
+
+  const order = rows.map((r) => r.dataset.name);
+  [order[idx], order[swapWith]] = [order[swapWith], order[idx]];
+
+  await fetch(`/api/engines/${card.dataset.engine}/order`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ order }),
   });
   loadPage("settings");
 });

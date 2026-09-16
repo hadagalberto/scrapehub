@@ -43,7 +43,9 @@ app.get("/api/status", (_req, res) => {
   const providers = cfg.providers.map((p) => {
     const period = "dailyQuota" in p ? "daily" : "monthly";
     const quota = p.dailyQuota ?? p.monthlyQuota ?? null;
-    const usageKey = `${p.name}:${periodKeyFor(period)}`;
+    // uso e' contado por api (conta), nao por entrada — serpapi_maps e
+    // serpapi_serp gastam da mesma quota de 100/mes da conta SerpApi
+    const usageKey = `${p.api}:${periodKeyFor(period)}`;
     const used = raw.usage[usageKey] || 0;
     return {
       ...p,
@@ -129,8 +131,26 @@ app.post("/api/providers/:name/toggle", (req, res) => {
 });
 
 app.post("/api/providers/:name/reset-usage", (req, res) => {
-  const store = getStore();
-  store.resetUsage(req.params.name);
+  const cfg = loadConfig();
+  const provider = cfg.providers.find((p) => p.name === req.params.name);
+  if (!provider) return res.status(404).json({ error: "provider nao encontrado" });
+  getStore().resetUsage(provider.api);
+  res.json({ ok: true });
+});
+
+// Reordena a cadeia de fallback de um engine: recebe a lista de nomes na
+// ordem desejada e reescreve priority = posicao. Entradas de outros
+// engines nao sao tocadas.
+app.put("/api/engines/:engine/order", (req, res) => {
+  const { order } = req.body || {};
+  if (!Array.isArray(order)) return res.status(400).json({ error: "body precisa de { order: [nomes...] }" });
+  const cfg = loadConfig();
+  const byName = new Map(cfg.providers.map((p) => [p.name, p]));
+  order.forEach((name, i) => {
+    const p = byName.get(name);
+    if (p && p.engine === req.params.engine) p.priority = i + 1;
+  });
+  writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2));
   res.json({ ok: true });
 });
 

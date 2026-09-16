@@ -63,8 +63,19 @@ export class GatewayStore {
 
   // ---- cache ----
 
+  // Serializacao estavel (chaves ordenadas em todos os niveis). A versao
+  // anterior usava JSON.stringify com array de replacer, que so deixa passar
+  // as chaves listadas — os params aninhados viravam {} e toda query do
+  // mesmo engine+provider colidia na mesma entrada de cache.
   static cacheKey(engine, provider, params) {
-    const raw = JSON.stringify({ engine, provider, params }, Object.keys({ engine, provider, params }).sort());
+    const stable = (v) => {
+      if (Array.isArray(v)) return `[${v.map(stable).join(",")}]`;
+      if (v && typeof v === "object") {
+        return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stable(v[k])}`).join(",")}}`;
+      }
+      return JSON.stringify(v);
+    };
+    const raw = stable({ engine, provider, params });
     return createHash("sha256").update(raw).digest("hex");
   }
 

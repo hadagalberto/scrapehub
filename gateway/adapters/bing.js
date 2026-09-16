@@ -6,7 +6,7 @@ export class BingAdapter extends BaseAdapter {
   apiKeyEnv = "BING_API_KEY";
 
   async search(engine, params) {
-    if (engine !== "serp") throw new ProviderError("bing adapter aqui so suporta engine 'serp'");
+    if (engine !== "serp" && engine !== "web") throw new ProviderError("bing so suporta engine 'serp' ou 'web'");
     const key = this._requireKey();
 
     // Bing v7 nao tem parametro de localizacao livre (so 'mkt', tipo

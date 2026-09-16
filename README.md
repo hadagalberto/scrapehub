@@ -109,16 +109,27 @@ for (const item of r.results) console.log(item.title, item.url);
 
 ## Providers configurados
 
-| Engine     | Providers | Params principais |
-|------------|-----------|--------------------|
-| maps       | HasData, Outscraper | `q`, `location?` |
-| serp       | HasData, SerpApi, Brave, Bing | `q`, `location?` |
-| web        | Google CSE, Brave | `q`, `location?` |
-| fetch      | ScraperAPI, ScrapingBee | `url` (HTML cru, JS opcional) |
-| instagram  | HasData, Outscraper* | `handle` (perfil + posts recentes) |
-| youtube    | HasData | `mode`: `search` (`q`), `video` (`v`), `channel` (`channelId`) |
-| amazon     | HasData | `q` (busca) ou `asin` (produto especifico) |
-| shopify    | HasData | `url` da loja (testado ao vivo com allbirds.com) |
+Ordem padrao de fallback (edita na tela de Configurações, com ↑↓):
+
+| Engine     | Cadeia de fallback (1º → último) | Params principais |
+|------------|-----------------------------------|--------------------|
+| maps       | HasData → SerpApi → Outscraper | `q`, `location?` |
+| serp       | HasData → SerpApi → Brave → ScraperAPI → ScrapingBee → Bing → Google CSE | `q`, `location?`, `gl?`, `hl?` |
+| web        | Google CSE → Brave → SerpApi → Bing → ScraperAPI → ScrapingBee | `q`, `location?` |
+| fetch      | ScraperAPI → ScrapingBee | `url`, `render?` (HTML cru) |
+| instagram  | HasData → SerpApi → Outscraper* | `handle` (perfil + posts recentes) |
+| youtube    | HasData → SerpApi | `mode`: `search` (`q`), `video` (`v`), `channel` (`channelId`) |
+| amazon     | HasData → SerpApi → ScraperAPI | `q` (busca) ou `asin` (produto), `domain?` (ex: `www.amazon.com.br`) |
+| shopify    | HasData | `url` da loja |
+
+\* best-effort, sem chave pra validar. Todo o resto foi testado ao vivo.
+
+**Uso/quota e' contado por conta (api), nao por linha** — `serpapi_maps` e
+`serpapi_serp` gastam da mesma cota de 100/mes da conta SerpApi. Se voce
+cadastrar 2 chaves de uma api, ajusta a quota das linhas dela pra somar.
+
+**Rotacao de chave**: se uma chave responde 429 ou "sem credito", o router
+tenta as outras chaves da mesma api antes de cair pro proximo provider.
 
 ## Como adicionar um provider novo
 
@@ -148,9 +159,10 @@ somente-leitura ou sumir num `npm update`.
 - `--no-cache` no CLI, `{ useCache: false }` no client, ou o checkbox no
   Playground pra forcar busca nova.
 
-## Nota sobre HasData/Outscraper
+## O que foi validado ao vivo
 
-Todos os engines do HasData e o `outscraper_maps` foram testados ao vivo com
-chave real (ver historico de commits). **`outscraper_instagram` e' best-effort**
-— sem chave configurada pra testar, confirma contra
-https://app.outscraper.com/api-docs antes de depender disso.
+Todos os engines do HasData, SerpApi (maps/serp/instagram/youtube/amazon),
+ScraperAPI (fetch/serp/amazon) e `outscraper_maps` foram testados ao vivo com chave
+real. **`outscraper_instagram`, ScrapingBee serp/web, Brave, Bing e Google CSE sao best-effort**
+— sem chave configurada pra testar; confirma contra a doc oficial de cada um
+antes de depender.

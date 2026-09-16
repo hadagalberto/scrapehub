@@ -429,6 +429,62 @@ tbody td {
 
 .engine-bar-fill { height: 100%; background: var(--accent); }
 
+/* ---- settings: fallback order ---- */
+
+.fallback-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.fallback-card {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.fallback-card h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.fallback-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.fallback-row.disabled-row { opacity: 0.45; }
+
+.fallback-pos {
+  width: 18px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+.fallback-name { flex: 1; font-weight: 600; }
+
+.fallback-row .pill { font-size: 10px; padding: 1px 6px; }
+
+.fallback-row button {
+  padding: 2px 7px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.fallback-row button:disabled { opacity: 0.3; cursor: default; }
+
 /* ---- settings ---- */
 
 .danger-row { display: flex; align-items: center; justify-content: space-between; }
