@@ -164,8 +164,8 @@ export class HasDataAdapter extends BaseAdapter {
       }
 
       case "shopify": {
-        // formato best-effort — nao testado ao vivo (sem chave configurada),
-        // segue o shape padrao do endpoint /products.json do proprio Shopify
+        // testado ao vivo contra allbirds.com (loja shopify real) — shape
+        // bate com o /products.json padrao do proprio Shopify
         const items = data.products || [];
         return items.map((item) => ({
           title: item.title,

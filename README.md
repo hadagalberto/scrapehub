@@ -118,7 +118,7 @@ for (const item of r.results) console.log(item.title, item.url);
 | instagram  | HasData | `handle` (perfil + posts recentes) |
 | youtube    | HasData | `mode`: `search` (`q`), `video` (`v`), `channel` (`channelId`) |
 | amazon     | HasData | `q` (busca) ou `asin` (produto especifico) |
-| shopify    | HasData | `url` da loja (best-effort, nao testado ao vivo) |
+| shopify    | HasData | `url` da loja (testado ao vivo com allbirds.com) |
 
 ## Como adicionar um provider novo
 
