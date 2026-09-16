@@ -115,7 +115,7 @@ for (const item of r.results) console.log(item.title, item.url);
 | serp       | HasData, SerpApi, Brave, Bing | `q`, `location?` |
 | web        | Google CSE, Brave | `q`, `location?` |
 | fetch      | ScraperAPI, ScrapingBee | `url` (HTML cru, JS opcional) |
-| instagram  | HasData | `handle` (perfil + posts recentes) |
+| instagram  | HasData, Outscraper* | `handle` (perfil + posts recentes) |
 | youtube    | HasData | `mode`: `search` (`q`), `video` (`v`), `channel` (`channelId`) |
 | amazon     | HasData | `q` (busca) ou `asin` (produto especifico) |
 | shopify    | HasData | `url` da loja (testado ao vivo com allbirds.com) |
@@ -150,6 +150,7 @@ somente-leitura ou sumir num `npm update`.
 
 ## Nota sobre HasData/Outscraper
 
-Os paths em `gateway/adapters/hasdata.js` e `outscraper.js` sao best-effort —
-confirma contra a documentacao oficial de cada um antes de rodar serio,
-endpoints podem variar por plano.
+Todos os engines do HasData e o `outscraper_maps` foram testados ao vivo com
+chave real (ver historico de commits). **`outscraper_instagram` e' best-effort**
+— sem chave configurada pra testar, confirma contra
+https://app.outscraper.com/api-docs antes de depender disso.

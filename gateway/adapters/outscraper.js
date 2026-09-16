@@ -1,41 +1,65 @@
-// Outscraper — especializado em Google Maps/reviews. Confirma path/schema
-// exatos em https://app.outscraper.com/api-docs antes de producao.
+// Outscraper — Maps/reviews e Instagram. Path/schema do maps confirmado ao
+// vivo (ver README). Instagram e' best-effort — sem chave configurada pra
+// testar, confirma contra https://app.outscraper.com/api-docs antes de
+// depender disso.
 import { BaseAdapter, ProviderError } from "./base.js";
-
-const BASE_URL = "https://api.outscraper.cloud/maps/search-v3";
 
 export class OutscraperAdapter extends BaseAdapter {
   apiKeyEnv = "OUTSCRAPER_API_KEY";
 
   async search(engine, params) {
-    if (engine !== "maps") throw new ProviderError("outscraper adapter aqui so suporta engine 'maps'");
     const key = this._requireKey();
-    // outscraper nao tem parametro de localizacao separado — o termo de busca
-    // e' o unico jeito de localizar (ex: "pizzaria, Santana - BA")
-    const { q, location, ...rest } = params;
-    const query = location ? `${q}, ${location}` : q;
 
-    const data = await this._get(BASE_URL, {
-      headers: { "X-API-KEY": key },
-      query: { query, ...rest },
-    });
-    return this._normalize(data);
+    if (engine === "maps") {
+      // outscraper nao tem parametro de localizacao separado — o termo de
+      // busca e' o unico jeito de localizar (ex: "pizzaria, Santana - BA")
+      const { q, location, ...rest } = params;
+      const query = location ? `${q}, ${location}` : q;
+
+      const data = await this._get("https://api.outscraper.cloud/maps/search-v3", {
+        headers: { "X-API-KEY": key },
+        query: { query, ...rest },
+      });
+      return this._normalizeMaps(data);
+    }
+
+    if (engine === "instagram") {
+      if (!params.handle) throw new ProviderError("outscraper instagram precisa de params.handle");
+      const data = await this._get("https://api.outscraper.cloud/instagram/profiles", {
+        headers: { "X-API-KEY": key },
+        query: { query: params.handle, async: false },
+      });
+      return this._normalizeInstagram(data);
+    }
+
+    throw new ProviderError(`outscraper nao suporta engine '${engine}'`);
   }
 
-  _normalize(data) {
+  _flattenGroups(data) {
     const groups = Array.isArray(data?.data) ? data.data : [];
-    const results = [];
+    const items = [];
     for (const group of groups) {
-      const items = Array.isArray(group) ? group : [group];
-      for (const item of items) {
-        results.push({
-          title: item.name,
-          url: item.site,
-          snippet: item.full_address || item.address,
-          extra: item,
-        });
-      }
+      if (Array.isArray(group)) items.push(...group);
+      else items.push(group);
     }
-    return results;
+    return items;
+  }
+
+  _normalizeMaps(data) {
+    return this._flattenGroups(data).map((item) => ({
+      title: item.name,
+      url: item.site,
+      snippet: item.full_address || item.address,
+      extra: item,
+    }));
+  }
+
+  _normalizeInstagram(data) {
+    return this._flattenGroups(data).map((item) => ({
+      title: item.full_name || item.username,
+      url: item.external_url || `https://instagram.com/${item.username}`,
+      snippet: `${item.followers ?? "?"} seguidores · ${item.biography ?? ""}`.trim(),
+      extra: item,
+    }));
   }
 }
